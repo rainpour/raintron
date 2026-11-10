@@ -79,21 +79,14 @@ RSpec.describe Raintron::Launcher do
     end
   end
 
-  describe '#wait_for_port' do
-    it 'returns once the port accepts a connection' do
-      server = TCPServer.new('127.0.0.1', 0)
-      launcher = described_class.new(title: 'Test', host: '127.0.0.1', port: server.addr[1]) { nil }
+  describe '#loading_url' do
+    it 'opens the rain cloud page as a data: URL, with the app as its fragment for the page to switch to' do
+      launcher = described_class.new(title: 'Test', host: '127.0.0.1', port: 4133) { nil }
 
-      expect { launcher.wait_for_port }.not_to raise_error
-    ensure
-      server&.close
-    end
+      data, fragment = launcher.loading_url.delete_prefix('data:text/html;charset=utf-8;base64,').split('#', 2)
 
-    it 'eventually gives up (Timeout::Error) if nothing is ever listening' do
-      launcher = described_class.new(title: 'Test', host: '127.0.0.1', port: 1) { nil }
-      allow(Timeout).to receive(:timeout).with(10).and_raise(Timeout::Error)
-
-      expect { launcher.wait_for_port }.to raise_error(Timeout::Error)
+      expect(data.unpack1('m0').force_encoding('UTF-8')).to eq(File.read(described_class::LOADING_PAGE))
+      expect(fragment).to eq('http://127.0.0.1:4133/')
     end
   end
 end

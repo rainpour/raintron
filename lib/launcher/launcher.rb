@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require 'socket'
-require 'timeout'
-
 module Raintron
   # Opens a Raindeer app in a native desktop window. The server runs as a real forked
   # child process, not a Thread inside this same process: webview_ruby's native run
@@ -11,7 +8,15 @@ module Raintron
   # Process.spawn of a separate script path) is mandatory once packed by Tebako, since
   # a resolvable script path for a second process to exec doesn't exist inside a
   # packed image -- the whole app lives in a single executable.
+  #
+  # The window opens straight away, on Raindown's rain cloud while the server boots:
+  # loading.html, self-contained and opened as a data: URL, as nothing's serving yet,
+  # with the app's URL as its fragment. The page polls that URL itself and switches to
+  # the app once it answers -- polling can't happen here, since the window's run loop
+  # holds the GVL from the moment it opens.
   class Launcher
+    LOADING_PAGE = File.expand_path('loading.html', __dir__)
+
     def initialize(title:, size: [900, 600], host: '127.0.0.1', port: 4133, app_root: Dir.pwd, &server_block)
       @title = title
       @width, @height = size
@@ -23,7 +28,6 @@ module Raintron
 
     def run
       start_server
-      wait_for_port
       open_window
     ensure
       stop_server
@@ -42,15 +46,10 @@ module Raintron
       end
     end
 
-    def wait_for_port
-      Timeout.timeout(10) do
-        loop do
-          TCPSocket.new(@host, @port).close
-          break
-        rescue Errno::ECONNREFUSED
-          sleep 0.05
-        end
-      end
+    # Base64, not percent-encoding, so the page's own # characters (its colours) can't
+    # be read as the start of the fragment.
+    def loading_url
+      "data:text/html;charset=utf-8;base64,#{[File.read(LOADING_PAGE)].pack('m0')}#http://#{@host}:#{@port}/"
     end
 
     def open_window
@@ -62,7 +61,7 @@ module Raintron
       webview = WebviewRuby::Webview.new
       webview.set_title(@title)
       webview.set_size(@width, @height)
-      webview.navigate("http://#{@host}:#{@port}/")
+      webview.navigate(loading_url)
       webview.run
       webview.destroy
     end
