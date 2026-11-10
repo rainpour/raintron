@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'timeout'
+
 RSpec.describe Raintron::Launcher do
   after { ENV.delete('RAINTRON_APP_ROOT') }
 
@@ -26,6 +28,7 @@ RSpec.describe Raintron::Launcher do
       end
       allow(Raintron::Shims).to receive(:apply!)
       allow(Raintron).to receive(:packed?).and_return(false)
+      allow(launcher).to receive(:stop_with_parent)
 
       launcher.start_server
 
@@ -40,6 +43,35 @@ RSpec.describe Raintron::Launcher do
       launcher.start_server
 
       expect($LOADED_FEATURES.grep(/webview_ruby/)).to be_empty
+    end
+  end
+
+  describe 'the forked server' do
+    # The window's process can end without returning to Ruby, like macOS's [NSApp terminate:] when its window closes.
+    it 'stops itself once the window process is gone' do
+      launcher = described_class.new(title: 'Test') { nil }
+      reader, writer = IO.pipe
+      window = fork do
+        fork do
+          launcher.send(:stop_with_parent, Process.ppid)
+          writer.puts(Process.pid)
+          sleep
+        end
+        sleep
+      end
+      server = reader.gets.to_i
+
+      Process.kill('KILL', window)
+      Process.wait(window)
+
+      expect(Timeout.timeout(3) { sleep 0.1 while running?(server) }).to be_nil
+    end
+
+    def running?(pid)
+      Process.kill(0, pid)
+      true
+    rescue Errno::ESRCH
+      false
     end
   end
 

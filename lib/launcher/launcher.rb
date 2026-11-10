@@ -16,6 +16,7 @@ module Raintron
   # holds the GVL from the moment it opens.
   class Launcher
     LOADING_PAGE = File.expand_path('loading.html', __dir__)
+    PARENT_CHECK_SECONDS = 0.5
 
     def initialize(title:, size: [900, 600], host: '127.0.0.1', port: 4133, app_root: Dir.pwd, &server_block)
       @title = title
@@ -41,6 +42,7 @@ module Raintron
       # correctly regardless of what directory bin/desktop was actually launched from.
       ENV['RAINTRON_APP_ROOT'] ||= @app_root
       @pid = fork do
+        stop_with_parent(Process.ppid)
         Raintron::Shims.apply!(packed: Raintron.packed?)
         @server_block.call
       end
@@ -77,6 +79,16 @@ module Raintron
     end
 
     private
+
+    # The server stops itself once the window's process is gone. On macOS that process ends in [NSApp terminate:] when
+    # its window closes, which exits without returning to Ruby, so #run's ensure never stops the server; this covers
+    # that, and a crash or a kill of the window's process too.
+    def stop_with_parent(parent)
+      Thread.new do
+        sleep PARENT_CHECK_SECONDS while Process.ppid == parent
+        exit!
+      end
+    end
 
     def hide_titlebar(webview)
       require_relative '../window_chrome/window_chrome'
