@@ -61,6 +61,7 @@ module Raintron
       webview = WebviewRuby::Webview.new
       webview.set_title(@title)
       webview.set_size(@width, @height)
+      hide_titlebar(webview) if AppConfig.titlebar(app_root: @app_root) == 'hidden'
       webview.navigate(loading_url)
       webview.run
       webview.destroy
@@ -73,6 +74,13 @@ module Raintron
       Process.wait(@pid)
     rescue Errno::ESRCH, Errno::ECHILD
       nil
+    end
+
+    private
+
+    def hide_titlebar(webview)
+      require_relative '../window_chrome/window_chrome'
+      WindowChrome.hide_titlebar(webview)
     end
   end
 end

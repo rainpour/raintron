@@ -18,6 +18,11 @@ module Raintron
       read(app_root).fetch('port', DEFAULT_PORT)
     end
 
+    # "hidden" for a window without a title bar, on macOS, which the page takes the place of; see WindowChrome.
+    def self.titlebar(app_root: Dir.pwd)
+      read(app_root).fetch('titlebar', 'native')
+    end
+
     def self.read(app_root)
       path = File.join(app_root, 'config', 'config.yaml')
       return {} unless File.exist?(path)

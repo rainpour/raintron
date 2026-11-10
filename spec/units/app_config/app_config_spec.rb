@@ -31,4 +31,21 @@ RSpec.describe Raintron::AppConfig do
       end
     end
   end
+
+  describe '.titlebar' do
+    it 'reads titlebar from config/config.yaml' do
+      Dir.mktmpdir do |dir|
+        FileUtils.mkdir_p(File.join(dir, 'config'))
+        File.write(File.join(dir, 'config', 'config.yaml'), "titlebar: hidden\n")
+
+        expect(described_class.titlebar(app_root: dir)).to eq('hidden')
+      end
+    end
+
+    it 'keeps the native title bar by default' do
+      Dir.mktmpdir do |dir|
+        expect(described_class.titlebar(app_root: dir)).to eq('native')
+      end
+    end
+  end
 end
