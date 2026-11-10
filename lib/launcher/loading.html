@@ -149,7 +149,7 @@ class Renderer {
   drawChars() {
     const cellWidth = CELL_W * this.scale
     const cellHeight = CELL_H * this.scale
-    this.context.font = `${Math.floor(cellHeight * 0.8)}px ui-monospace, Menlo, monospace`
+    this.context.font = `${Math.floor(cellHeight * 0.85)}px ui-monospace, Menlo, monospace`
     this.context.textAlign = 'center'
     this.context.textBaseline = 'middle'
     for (const cell of this.grid.cells) {
@@ -278,14 +278,21 @@ class RainCloud {
 
 
 // The loading page: the rain cloud filling the window until the app's server answers, then the app.
-const SCALE = 2
+
+// The editor's scale, so the cloud's cells are the grid's: a grid pixel is a CSS pixel, rounded to a whole number
+// of the screen's.
+const DEVICE_SCALE = Math.max(1, Math.round(devicePixelRatio))
+const CSS_SCALE = DEVICE_SCALE / devicePixelRatio
 const POLL_MS = 200
 
 const grid = new Grid(
-  Math.max(Math.floor(innerWidth / (CELL_W * SCALE)), 50),
-  Math.max(Math.floor(innerHeight / (CELL_H * SCALE)), 24)
+  Math.max(Math.floor(innerWidth / (CELL_W * CSS_SCALE)), 50),
+  Math.max(Math.floor(innerHeight / (CELL_H * CSS_SCALE)), 24)
 )
-const renderer = new Renderer(document.querySelector('canvas'), grid, SCALE)
+const canvas = document.querySelector('canvas')
+const renderer = new Renderer(canvas, grid, DEVICE_SCALE)
+canvas.style.width = `${grid.pixelWidth * CSS_SCALE}px`
+canvas.style.height = `${grid.pixelHeight * CSS_SCALE}px`
 const cloud = new RainCloud(grid)
 cloud.paintCloud()
 
