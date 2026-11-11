@@ -25,20 +25,13 @@ RSpec.describe Raintron::Shims do
   end
 
   describe '.apply!' do
-    it 'always requires the console shim, regardless of packed:' do
-      expect(described_class).to receive(:require_relative).with('console_shim')
-      described_class.apply!(packed: false)
-    end
-
     it 'requires the packed fs shim only when packed: true' do
-      allow(described_class).to receive(:require_relative).with('console_shim')
       expect(described_class).to receive(:require_relative).with('packed_fs_shim')
 
       described_class.apply!(packed: true)
     end
 
     it 'does not require the packed fs shim when packed: false' do
-      allow(described_class).to receive(:require_relative).with('console_shim')
       expect(described_class).not_to receive(:require_relative).with('packed_fs_shim')
 
       described_class.apply!(packed: false)
@@ -46,7 +39,6 @@ RSpec.describe Raintron::Shims do
 
     it 'defaults packed: to .packed? when not given explicitly' do
       allow(described_class).to receive(:packed?).and_return(true)
-      allow(described_class).to receive(:require_relative).with('console_shim')
       expect(described_class).to receive(:require_relative).with('packed_fs_shim')
 
       described_class.apply!

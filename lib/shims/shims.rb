@@ -12,7 +12,6 @@ module Raintron
   # of that, not the only thing preventing interference with normal development.
   module Shims
     def self.apply!(packed: packed?)
-      require_relative 'console_shim'
       require_relative 'packed_fs_shim' if packed
     end
 
