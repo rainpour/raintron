@@ -75,6 +75,21 @@ RSpec.describe Raintron::Launcher do
     end
   end
 
+  describe '#open_window' do
+    it "opens a browser window where there's no web view, like Linux without WebKitGTK" do
+      launcher = described_class.new(title: 'Test', port: 4133) { nil }
+      window = instance_double(Raintron::BrowserWindow, run: true)
+      allow(launcher).to receive(:require).and_call_original
+      allow(launcher).to receive(:require).with('webview_ruby').and_raise(LoadError, 'libwebkit2gtk-4.0.so.37: not found')
+      allow(Raintron::BrowserWindow).to receive(:new).and_return(window)
+
+      launcher.open_window
+
+      expect(Raintron::BrowserWindow).to have_received(:new)
+        .with(title: 'Test', app_url: 'http://127.0.0.1:4133/', size: [900, 600])
+    end
+  end
+
   describe '#stop_server' do
     it 'sends TERM and waits for the pid' do
       launcher = described_class.new(title: 'Test') { nil }

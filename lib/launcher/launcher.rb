@@ -13,7 +13,8 @@ module Raintron
   # loading.html, self-contained and opened as a data: URL, as nothing's serving yet,
   # with the app's URL as its fragment. The page polls that URL itself and switches to
   # the app once it answers -- polling can't happen here, since the window's run loop
-  # holds the GVL from the moment it opens.
+  # holds the GVL from the moment it opens. Without a native web view, like Linux
+  # without WebKitGTK, it opens in a browser instead (see BrowserWindow).
   class Launcher
     LOADING_PAGE = File.expand_path('loading.html', __dir__)
     PARENT_CHECK_SECONDS = 0.5
@@ -51,14 +52,23 @@ module Raintron
     # Base64, not percent-encoding, so the page's own # characters (its colours) can't
     # be read as the start of the fragment.
     def loading_url
-      "data:text/html;charset=utf-8;base64,#{[File.read(LOADING_PAGE)].pack('m0')}#http://#{@host}:#{@port}/"
+      "data:text/html;charset=utf-8;base64,#{[File.read(LOADING_PAGE)].pack('m0')}##{app_url}"
+    end
+
+    def app_url
+      "http://#{@host}:#{@port}/"
     end
 
     def open_window
       # Required only here, only in the parent, only after fork: macOS's Cocoa/WebKit
       # frameworks (which this pulls in) are not fork-safe, so the child must never
-      # have loaded them.
-      require 'webview_ruby'
+      # have loaded them. Loading it loads the platform's web view, so it fails where
+      # there's none, like Linux without WebKitGTK.
+      begin
+        require 'webview_ruby'
+      rescue LoadError
+        return open_browser
+      end
 
       webview = WebviewRuby::Webview.new
       webview.set_title(@title)
@@ -88,6 +98,17 @@ module Raintron
         sleep PARENT_CHECK_SECONDS while Process.ppid == parent
         exit!
       end
+    end
+
+    # A browser window, which ends like the native one, or a tab, whose closing can't be seen, so the server runs until
+    # it's stopped.
+    def open_browser
+      require_relative 'browser_window'
+      window = BrowserWindow.new(title: @title, app_url:, size: [@width, @height])
+      return if window.run
+
+      warn "#{@title} is open in your browser. Press Ctrl+C here to stop it."
+      Process.wait(@pid)
     end
 
     def hide_titlebar(webview)

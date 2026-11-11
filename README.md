@@ -69,7 +69,7 @@ Checks native-toolkit prerequisites for `webview_ruby` on demand.
 
 The CI workflow `raintron install` generates presses your app into a single self-contained executable per OS. Two things worth knowing:
 
-- **Linux still needs GTK3 + WebKit2GTK installed on the end user's machine**, even with a packed executable -- `webview_ruby`'s Linux backend links against them at runtime, and Tebako can't statically bundle a GUI toolkit away. macOS and Windows don't have this problem; they use the OS's own built-in WebKit/WebView2.
+- **Linux opens in a browser when GTK3 + WebKit2GTK aren't installed**, so a packed executable needs nothing beside it -- `webview_ruby`'s Linux backend loads them at runtime, and Tebako can't statically bundle a GUI toolkit away. Without them, the app opens in a Chromium-based browser's app window (Chrome, Chromium, Brave or Edge), a window without tabs or an address bar, with a profile of its own, and stops when it closes; with none of those, in a tab of the default browser, running until Ctrl+C. Either way it opens once the server answers, without the rain cloud, as Chromium won't let a `data:` page reach `127.0.0.1`. macOS and Windows use the OS's own built-in WebKit/WebView2.
 - **Windows is best-effort** in the generated CI (`continue-on-error`), because both Tebako's own Windows release leg and `webview_ruby`'s native build are incomplete today. It'll start passing on its own once either upstream gap closes.
 
 ## How it works
