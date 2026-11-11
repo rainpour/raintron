@@ -19,6 +19,8 @@ module Raintron
         attach_function :selector, :sel_registerName, [:string], :pointer
         attach_function :send_for_pointer, :objc_msgSend, %i[pointer pointer], :pointer
         attach_function :send_for_ulong, :objc_msgSend, %i[pointer pointer], :ulong
+        attach_function :send_for_long, :objc_msgSend, %i[pointer pointer], :long
+        attach_function :send_for_string, :objc_msgSend, %i[pointer pointer], :string
         attach_function :send_pointer, :objc_msgSend, %i[pointer pointer pointer], :void
         attach_function :send_ulong, :objc_msgSend, %i[pointer pointer ulong], :void
         attach_function :send_bool, :objc_msgSend, %i[pointer pointer bool], :void

@@ -74,6 +74,7 @@ module Raintron
       webview.set_title(@title)
       webview.set_size(@width, @height)
       hide_titlebar(webview) if AppConfig.titlebar(app_root: @app_root) == 'hidden'
+      bind_dialogs(webview)
       webview.navigate(loading_url)
       webview.run
       webview.destroy
@@ -114,6 +115,11 @@ module Raintron
     def hide_titlebar(webview)
       require_relative '../window_chrome/window_chrome'
       WindowChrome.hide_titlebar(webview)
+    end
+
+    def bind_dialogs(webview)
+      require_relative '../dialogs/dialogs'
+      Dialogs.bind(webview)
     end
   end
 end
