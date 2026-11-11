@@ -2,11 +2,17 @@
 
 <a href="https://github.com/raindeer-rb/raintron" title="GitHub"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub repo" height="18"></a>
 
-Raintron enables desktop applications to be made with web apps via [Raindeer](https://github.com/raindeer-rb/raindeer). Raintron uses [Tebako](https://github.com/tamatebako/tebako) so no system Ruby is required on the end user's machine.
+Raintron enables desktop applications to be made with web technologies and Ruby. It uses [Tebako](https://github.com/tamatebako/tebako) so no system Ruby is required on the end user's machine. It can also be used with the [Raindeer](https://github.com/raindeer-rb/raindeer) web framework as a back-end server for your front-end web app.
+
+**✨ Features:**
+- Uses the OS's existing webview
+- Much smaller app size due to not bundling Chromium
+- Similar levels of performance
+- [Raindeer](https://github.com/raindeer-rb/raindeer) integration
 
 ## Installation
 
-Add to an existing Raindeer app's Gemfile:
+Add to an existing app's Gemfile:
 
 ```ruby
 gem 'raintron'
@@ -25,7 +31,7 @@ If `bundle install` fails there, see **Prerequisites** below, or run `bundle exe
 
 ### `raintron install :app_name`
 
-Wires desktop-app capability into the Raindeer app in the current directory. Idempotent -- re-running skips files that already exist.
+Wires desktop-app capability into the app in the current directory. Idempotent -- re-running skips files that already exist.
 
 Writes: `bin/desktop` (thin -- all real logic is `Raintron.launch`, from this gem), `<Name>.app/` (a macOS dev bundle: `Info.plist`, a `launch` script, and an icon), `icons/<name>.{icns,ico,png,desktop}`, and `.github/workflows/build.yml` (a Tebako packing CI matrix).
 
